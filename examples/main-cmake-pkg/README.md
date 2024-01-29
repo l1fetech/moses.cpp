@@ -1,0 +1,37 @@
+# moses.cpp/example/main-cmake-pkg
+
+This program builds the [main](../main) application using a relocatable CMake package. It serves as an example of using the `find_package()` CMake command to conveniently include [moses.cpp](https://github.com/l1fetech/moses.cpp) in projects which live outside of the source tree.
+
+## Building
+
+Because this example is "outside of the source tree", it is important to first build/install moses.cpp using CMake. An example is provided here, but please see the [moses.cpp build instructions](../..) for more detailed build instructions.
+
+### Considerations
+
+When hardware acceleration libraries are used (e.g. CUBlas, Metal, CLBlast, etc.), CMake must be able to locate the associated CMake package. In the example below, when building _main-cmake-pkg_ notice the `CMAKE_PREFIX_PATH` includes the Moses CMake package location _in addition to_ the CLBlast package—which was used when compiling _moses.cpp_.
+
+### Build moses.cpp and install to C:\MosesCPP directory
+
+In this case, CLBlast was already installed so the CMake package is referenced in `CMAKE_PREFIX_PATH`.
+
+```cmd
+git clone https://github.com/l1fetech/moses.cpp
+cd moses.cpp
+mkdir build
+cd build
+cmake .. -DBUILD_SHARED_LIBS=OFF -DMOSES_CLBLAST=ON -DCMAKE_PREFIX_PATH=C:/CLBlast/lib/cmake/CLBlast -G "Visual Studio 17 2022" -A x64
+cmake --build . --config Release
+cmake --install . --prefix C:/MosesCPP
+```
+
+### Build main-cmake-pkg
+
+
+```cmd
+cd ..\examples\main-cmake-pkg
+mkdir build
+cd build
+cmake .. -DBUILD_SHARED_LIBS=OFF -DCMAKE_PREFIX_PATH="C:/CLBlast/lib/cmake/CLBlast;C:/MosesCPP/lib/cmake/Moses" -G "Visual Studio 17 2022" -A x64
+cmake --build . --config Release
+cmake --install . --prefix C:/MyMosesApp
+```

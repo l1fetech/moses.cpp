@@ -1,0 +1,71 @@
+set(MOSES_VERSION @MOSES_INSTALL_VERSION@)
+set(MOSES_BUILD_COMMIT @MOSES_BUILD_COMMIT@)
+set(MOSES_BUILD_NUMBER @MOSES_BUILD_NUMBER@)
+set(MOSES_SHARED_LIB @BUILD_SHARED_LIBS@)
+set(MOSES_BLAS @MOSES_BLAS@)
+set(MOSES_CUBLAS @MOSES_CUBLAS@)
+set(MOSES_METAL @MOSES_METAL@)
+set(MOSES_MPI @MOSES_MPI@)
+set(MOSES_CLBLAST @MOSES_CLBLAST@)
+set(MOSES_HIPBLAS @MOSES_HIPBLAS@)
+set(MOSES_ACCELERATE @MOSES_ACCELERATE@)
+
+@PACKAGE_INIT@
+
+set_and_check(MOSES_INCLUDE_DIR "@PACKAGE_MOSES_INCLUDE_INSTALL_DIR@")
+set_and_check(MOSES_LIB_DIR "@PACKAGE_MOSES_LIB_INSTALL_DIR@")
+set_and_check(MOSES_BIN_DIR "@PACKAGE_MOSES_BIN_INSTALL_DIR@")
+
+# Ensure transient dependencies satisfied
+
+find_package(Threads REQUIRED)
+if (APPLE AND MOSES_ACCELERATE)
+    find_library(ACCELERATE_FRAMEWORK Accelerate REQUIRED)
+endif()
+
+if (MOSES_BLAS)
+    find_package(BLAS REQUIRED)
+endif()
+
+if (MOSES_CUBLAS)
+    find_package(CUDAToolkit REQUIRED)
+endif()
+
+if (MOSES_METAL)
+    find_library(FOUNDATION_LIBRARY Foundation REQUIRED)
+    find_library(METAL_FRAMEWORK Metal REQUIRED)
+    find_library(METALKIT_FRAMEWORK MetalKit REQUIRED)
+endif()
+
+if (MOSES_MPI)
+    find_package(MPI REQUIRED)
+endif()
+
+if (MOSES_CLBLAST)
+    find_package(CLBlast REQUIRED)
+endif()
+
+if (MOSES_HIPBLAS)
+    find_package(hip REQUIRED)
+    find_package(hipblas REQUIRED)
+    find_package(rocblas REQUIRED)
+endif()
+
+find_library(moses_LIBRARY moses
+    REQUIRED
+    HINTS ${MOSES_LIB_DIR})
+
+set(_moses_link_deps "Threads::Threads" "@MOSES_EXTRA_LIBS@")
+set(_moses_transient_defines "@MOSES_TRANSIENT_DEFINES@")
+add_library(moses UNKNOWN IMPORTED)
+set_target_properties(moses
+    PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${MOSES_INCLUDE_DIR}"
+        INTERFACE_LINK_LIBRARIES "${_moses_link_deps}"
+        INTERFACE_COMPILE_DEFINITIONS "${_moses_transient_defines}"
+        IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+        IMPORTED_LOCATION "${moses_LIBRARY}"
+        INTERFACE_COMPILE_FEATURES cxx_std_11
+        POSITION_INDEPENDENT_CODE ON )
+
+check_required_components(Moses)
